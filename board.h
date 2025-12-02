@@ -6,6 +6,8 @@
 
 typedef enum{ EMPTY, wPawn, wKnight, wBishop, wRook, wQueen, wKing, bPawn, bKnight, bBishop, bRook, bQueen, bKing } Piece;  
 
+typedef enum{white,black}Color;
+
 typedef enum {
     a8 = 21, b8, c8, d8, e8, f8, g8, h8,  // 21-28
     a7 = 31, b7, c7, d7, e7, f7, g7, h7,  // 31-38
