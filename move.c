@@ -399,11 +399,21 @@ void make_move(Board *b, Square src, Square dst){
 
    if(p == wKing){
         b->white_king_sq = dst;
-   } else if(p == bKing){
+    } else if(p == bKing){
         b->black_king_sq = dst;
-   }
+    }
 
-   b->board[src] = EMPTY; 
-   b->board[dst] = p;
+    b->board[src] = EMPTY; 
+    b->board[dst] = p;
+
+    if (p == wPawn && dst >= 21 && dst <= 28) {
+        printf("White pawn promoting at %d\n", dst);
+        b->board[dst] = wQueen;
+    } else if (p == bPawn && dst >= 91 && dst <= 98) {
+        printf("Black pawn promoting at %d\n", dst);
+        b->board[dst] = bQueen;
+    }
+
+
    b->turn ^= 1;
 }
