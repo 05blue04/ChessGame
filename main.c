@@ -3,12 +3,15 @@
 #include <string.h>
 #include "board.h"
 #include "move.h"
+#include "test.h"
+#include "gui.h"
 
 void print_usage(const char *program_name) {
     printf("Usage: %s [OPTIONS]\n", program_name);
     printf("Options:\n");
     printf("  (no args)         Start new game with default position\n");
     printf("  --fen <string>    Load position from FEN string\n");
+    printf("  --test            Run test suite\n");
     printf("  --help            Show this help message\n");
 }
 
@@ -19,15 +22,13 @@ int main(int argc, char **argv){
     if(argc == 1) {
         // No arguments - default board
         b = create_board_default();
-        if(b == NULL)
+        if(b == NULL){
+            fprintf(stderr, "Error: unable to allocate memory for board\n");
             return EXIT_FAILURE;
-        print_board(b);
-        make_move(b,e2,e4);
-        make_move(b,e7,e5);
-        make_move(b,f1,a6);
-        make_move(b,c1,e3);
-
-        print_board(b);
+        }
+        gui_init();
+        gui_run_game(b);
+        gui_cleanup();
         destroy_board(b);
     }
     else if(argc == 2 && strcmp(argv[1], "--help") == 0) {
@@ -41,14 +42,12 @@ int main(int argc, char **argv){
             return EXIT_FAILURE;
         }
     }
+    else if(argc == 2 && strcmp(argv[1], "--test") == 0) {
+        test_movement();
+    }
     else {
         fprintf(stderr, "Error: Invalid arguments\n");
         print_usage(argv[0]);
-        return EXIT_FAILURE;
-    }
-    
-    if(b == NULL) {
-        fprintf(stderr, "Error: Failed to create board\n");
         return EXIT_FAILURE;
     }
 
