@@ -22,6 +22,12 @@ Board *create_board_default(){
     }
 
     b->turn = white;
+    b->b_castle_king = 1;
+    b->b_castle_queen = 1;
+    b->w_castle_king = 1;
+    b->w_castle_queen = 1;
+    b->white_king_sq = e1;
+    b->black_king_sq = e8;
 
     //initalize pieces onto board
     for(int i = 31; i < 39; i++){
@@ -55,6 +61,52 @@ Board *create_board_default(){
 
 
     return b;
+}
+
+void reset_board_default(Board *b){
+
+    b->turn = white;
+    b->b_castle_king = 1;
+    b->b_castle_queen = 1;
+    b->w_castle_king = 1;
+    b->w_castle_queen = 1;
+    b->white_king_sq = e1;
+    b->black_king_sq = e8;
+
+    for(int i = 31; i < 39; i++){
+        b->board[i] = bPawn;
+    }
+
+    for(int i = 81; i < 89; i++){
+        b->board[i] = wPawn;
+    }
+
+    b->board[b8] = bKnight;
+    b->board[g8] = bKnight;
+    b->board[b1] = wKnight;
+    b->board[g1] = wKnight;
+
+    b->board[c8] = bBishop;
+    b->board[f8] = bBishop;
+    b->board[c1] = wBishop;
+    b->board[f1] = wBishop;
+
+    b->board[a8] = bRook;
+    b->board[h8] = bRook;
+    b->board[a1] = wRook;
+    b->board[h1] = wRook;
+
+    b->board[d8] = bQueen;
+    b->board[d1] = wQueen;
+    
+    b->board[e8] = bKing;
+    b->board[e1] = wKing;
+
+    for(int rank = 4; rank < 8; rank++){
+        for(int file = 1; file < 9; file++){
+            b->board[rank * 10 + file] = EMPTY;
+        }
+    }
 }
 
 static const char* piece_to_string(int piece) {

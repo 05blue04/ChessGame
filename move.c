@@ -75,21 +75,24 @@ int is_legal_move(Board *b, Square src, Square dst){
 
     //case analysis
     int check = 0;
+    int valid = 0;
     switch (p)
     {
     case wPawn:
         check = src - dst;
         
         if(check == 10){ // move straight up
-            return (dst_p == EMPTY);
+            valid = (dst_p == EMPTY);
+            break;
         }
 
         if(check == 9 || check == 11){ // capture diagonaly 
-            return (dst_p != EMPTY);
+            valid = (dst_p != EMPTY);
+            break;
         }
 
         if(check == 20 && (src >= 81 && src <= 88)){ //move up 2 ONLY on starting move
-            return (dst_p == EMPTY && b->board[src - 10] == EMPTY);
+            valid = (dst_p == EMPTY && b->board[src - 10] == EMPTY);
         }
 
         break;
@@ -98,15 +101,17 @@ int is_legal_move(Board *b, Square src, Square dst){
         check = dst - src;
         
         if(check == 10){ // move straight down
-            return (dst_p == EMPTY);
+            valid = (dst_p == EMPTY);
+            break;
         }
 
         if(check == 9 || check == 11){ // capture diagonaly
-            return (dst_p != EMPTY);
+            valid = (dst_p != EMPTY);
+            break;
         }
 
         if(check == 20 && (src >= 31 && src <= 38)){ //move up 2 ONLY on starting move
-            return (dst_p == EMPTY && b->board[src + 10] == EMPTY);
+            valid = (dst_p == EMPTY && b->board[src + 10] == EMPTY);
         }
         break;
 
@@ -116,7 +121,7 @@ int is_legal_move(Board *b, Square src, Square dst){
 
         if(check == 21 || check == 19 || check == 12 || check == 8 ||
             check == -21 || check == -19 || check == -12 || check == -8){
-                return 1;
+                valid = 1;
         }
 
         break;            
@@ -124,14 +129,14 @@ int is_legal_move(Board *b, Square src, Square dst){
 
     case wKing:
     case bKing: {
-        printf("check\n");
-        int diff = dst - src;
+        
+        int check = dst - src;
 
-        if (diff == 1  || diff == -1  ||  // horizontal
-            diff == 10 || diff == -10 ||  // vertical
-            diff == 11 || diff == -11 ||  // diagonal
-            diff == 9  || diff == -9) {   // diag 
-            return 1;
+        if (check == 1  || check == -1  ||  // horizontal
+            check == 10 || check == -10 ||  // vertical
+            check == 11 || check == -11 ||  // diagonal
+            check == 9  || check == -9) {   // diag 
+            valid = 1;
         }
 
         break;
@@ -156,20 +161,22 @@ int is_legal_move(Board *b, Square src, Square dst){
                 dir = -9;
             }
         } else{
-            return 0;
+            valid = 0;
+            break;
         }
 
         //traverse the path of the diagonal to ensure nothing is blocking the move
         int square = src + dir; 
         while(square != (int)dst){
             if(b->board[square] != EMPTY){ //check if path is occupied
-                return 0;
+                valid = 0;
+                break;
             }
             square += dir;
         }
 
-        return 1;
-
+        valid = 1;
+        break;
     }
 
     case wRook:
@@ -190,19 +197,22 @@ int is_legal_move(Board *b, Square src, Square dst){
                 dir = -1;
             }
         } else{
-            return 0;
+            valid = 0;
+            break;
         }
 
         //traverse path of rook to ensure no pieces are blocking its path
         int square = src + dir;
         while(square != (int)dst){
             if (b->board[square] != EMPTY){
-                return 0;
+                valid = 0;
+                break;
             }
             square += dir;
         }
 
-        return 1;
+        valid = 1;
+        break;
     }
 
     case wQueen:
@@ -236,27 +246,147 @@ int is_legal_move(Board *b, Square src, Square dst){
                 dir = -9;
             }
         } else{
-            return 0;
+            valid = 0;
+            break;
         }
 
         // traverse the path
         int square = src + dir;
         while(square != (int)dst){
             if(b->board[square] != EMPTY){
-                return 0;
+                valid = 0;
+                break;
             }
             square += dir;
         }
 
-        return 1;
+        valid = 1;
+        break;
     }
         
     default:
         break;
     }
 
-    return 0;
+    if(!valid){
+        return 0;
+    }
+    
+    // determine if the move leaves king in check
+    b->board[dst] = p;
+    b->board[src] = EMPTY;
+    
+    // Update king position if king moved
+    Square old_king_sq = -1;
+    if (p == wKing) {
+        old_king_sq = b->white_king_sq;
+        b->white_king_sq = dst;
+    } else if (p == bKing) {
+        old_king_sq = b->black_king_sq;
+        b->black_king_sq = dst;
+    }
 
+    int in_check = is_in_check(b, b->turn);
+
+    // Undo move
+    b->board[src] = p;
+    b->board[dst] = dst_p;
+    
+    if (p == wKing) {
+        b->white_king_sq = old_king_sq;
+    } else if (p == bKing) {
+        b->black_king_sq = old_king_sq;
+    }
+
+    if (in_check) {
+        fprintf(stderr, "move leaves king in check\n");
+        return 0;
+    }
+
+    return 1;
+
+}
+
+int is_square_attacked(Board *b, Square sq, int by_color){
+    // knight attacks
+    int knight_offsets[] = {21, 19, 12, 8, -21, -19, -12, -8};
+    int enemy_knight = (by_color == white) ? wKnight : bKnight; 
+
+    for(int i = 0; i < 8; i++){
+        Square s = sq + knight_offsets[i];
+        if(is_square_valid(s) && (b->board[s] == enemy_knight))
+            return 1;
+    }
+
+    // pawn attacks
+    if (by_color == white) {
+        // White pawns attack from below 
+        if (is_square_valid(sq + 11) && b->board[sq + 11] == wPawn){
+            return 1;
+        } 
+        if (is_square_valid(sq + 9) && b->board[sq + 9] == wPawn){
+            return 1;
+        }
+    } else {
+        // Black pawns attack from above 
+        if (is_square_valid(sq - 11) && b->board[sq - 11] == bPawn){
+            return 1;
+        } 
+        if (is_square_valid(sq - 9) && b->board[sq - 9] == bPawn){
+            return 1;
+        }
+    }
+
+    // King attacks
+    int king_offsets[] = {1, -1, 10, -10, 11, -11, 9, -9};
+    int enemy_king = (by_color == white) ? wKing : bKing;
+    
+    for (int i = 0; i < 8; i++) {
+        Square s = sq + king_offsets[i];
+        if (is_square_valid(s) && b->board[s] == enemy_king)
+            return 1;
+    }
+
+    // Bishop/queen attacks (diagonals)
+    int diagonals[] = {11, -11, 9, -9};
+    int enemy_bishop = (by_color == white) ? wBishop : bBishop;
+    int enemy_queen = (by_color == white) ? wQueen : bQueen;
+    
+    for (int i = 0; i < 4; i++) {
+        Square s = sq + diagonals[i];
+        while (is_square_valid(s)) {
+            if (b->board[s] != EMPTY) {
+                if (b->board[s] == enemy_bishop || b->board[s] == enemy_queen)
+                    return 1;
+                break;  // Blocked by some piece
+            }
+            s += diagonals[i];
+        }
+    }
+
+    // Rook/queen attacks (lines)
+    int verticals[] = {10, -10, 1, -1};
+    int enemy_rook = (by_color == white) ? wRook : bRook;
+    
+    for (int i = 0; i < 4; i++) {
+        Square s = sq + verticals[i];
+        while (is_square_valid(s)) {
+            if (b->board[s] != EMPTY) {
+                if (b->board[s] == enemy_rook || b->board[s] == enemy_queen)
+                    return 1;
+                break;
+            }
+            s += verticals[i];
+        }
+    }
+
+    return 0;
+}
+
+int is_in_check(Board *b, int color){
+    Square king_sq = (color == white) ? b->white_king_sq : b->black_king_sq;
+    int enemy = (color == white) ? black : white;
+    return is_square_attacked(b, king_sq, enemy);
 }
 
 void make_move(Board *b, Square src, Square dst){
@@ -266,8 +396,14 @@ void make_move(Board *b, Square src, Square dst){
     }
 
    Piece p = b->board[src];
+
+   if(p == wKing){
+        b->white_king_sq = dst;
+   } else if(p == bKing){
+        b->black_king_sq = dst;
+   }
+
    b->board[src] = EMPTY; 
    b->board[dst] = p;
-
    b->turn ^= 1;
 }

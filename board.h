@@ -6,7 +6,7 @@
 
 typedef enum{ EMPTY, wPawn, wKnight, wBishop, wRook, wQueen, wKing, bPawn, bKnight, bBishop, bRook, bQueen, bKing } Piece;  
 
-typedef enum{white,black}Color;
+enum{white,black};
 
 typedef enum {
     a8 = 21, b8, c8, d8, e8, f8, g8, h8,  // 21-28
@@ -23,6 +23,14 @@ typedef enum {
 typedef struct _Board {
     int *board;
     int turn;
+    Square white_king_sq;
+    Square black_king_sq;
+
+
+    int w_castle_king; //can white king side castle?
+    int w_castle_queen; //can white queen side castle?
+    int b_castle_king;
+    int b_castle_queen;
 } Board;
 
 //allocate memory for board
@@ -34,5 +42,7 @@ void print_board(Board *b);
 
 //free the board
 void destroy_board(Board *b);
+
+void reset_board_default(Board *b);
 
 #endif //BOARD_H
