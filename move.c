@@ -137,8 +137,49 @@ int is_legal_move(Board *b, Square src, Square dst){
             check == 11 || check == -11 ||  // diagonal
             check == 9  || check == -9) {   // diag 
             valid = 1;
+            break;
         }
 
+        int enemy = 1 ^ b->turn; // flipping color
+
+        //check king side castle e1 to g1 **WHITE
+        if(p == wKing && src == e1){
+            if(check == 2 && b->w_castle_king){
+                if(b->board[f1] == EMPTY && b->board[g1] == EMPTY && b->board[h1] == wRook
+                    && !is_square_attacked(b,e1, enemy) && !is_square_attacked(b,f1,enemy) && !is_square_attacked(b,g1,enemy)){
+                        valid = 1;
+                }
+            }
+        }
+
+        // check queen side castle e1 to c1 **WHITE
+        if(p == wKing && src == e1){
+            if(check == -2 && b->w_castle_queen){
+                if(b->board[d1] == EMPTY && b->board[c1] == EMPTY && b->board[b1] == EMPTY && b->board[a1] == wRook
+                    && !is_square_attacked(b,e1, enemy) && !is_square_attacked(b,d1,enemy) && !is_square_attacked(b,c1,enemy)){
+                        valid = 1;
+                }
+            }
+        }
+        
+        // check king side castle e8 to g8 ** BLACK
+        if(p == bKing && src == e8){
+            if(check == 2 && b->b_castle_king){
+                if(b->board[f8] == EMPTY && b->board[g8] == EMPTY && b->board[h8] == bRook
+                    && !is_square_attacked(b,e8, enemy) && !is_square_attacked(b,f8,enemy) && !is_square_attacked(b,g8,enemy)){
+                        valid = 1;
+                }
+            }
+        }
+        // check queen side castle e8 to c8 **BLACK
+        if(p == bKing && src == e8){
+            if(check == -2 && b->b_castle_queen){
+                if(b->board[d8] == EMPTY && b->board[c8] == EMPTY && b->board[b8] == EMPTY && b->board[a8] == bRook
+                    && !is_square_attacked(b,e8, enemy) && !is_square_attacked(b,d8,enemy) && !is_square_attacked(b,c8,enemy)){
+                        valid = 1;
+                }
+            }
+        }
         break;
     }
 
@@ -397,6 +438,42 @@ void make_move(Board *b, Square src, Square dst){
 
    Piece p = b->board[src];
 
+       // Handle castling - move the rook too
+    if (p == wKing && abs((int)dst - (int)src) == 2) {
+        if (dst == g1) {  // Kingside
+            b->board[f1] = wRook;
+            b->board[h1] = EMPTY;
+        } else if (dst == c1) {  // Queenside
+            b->board[d1] = wRook;
+            b->board[a1] = EMPTY;
+        }
+    }
+    if (p == bKing && abs((int)dst - (int)src) == 2) {
+        if (dst == g8) {  // Kingside
+            b->board[f8] = bRook;
+            b->board[h8] = EMPTY;
+        } else if (dst == c8) {  // Queenside
+            b->board[d8] = bRook;
+            b->board[a8] = EMPTY;
+        }
+    }
+    
+    // Update castling rights
+    if (p == wKing) {
+        b->w_castle_king = 0;
+        b->w_castle_queen = 0;
+    } else if (p == bKing) {
+        b->b_castle_king = 0;
+        b->b_castle_queen = 0;
+    } else if (p == wRook) {
+        if (src == a1) b->w_castle_queen = 0;
+        if (src == h1) b->w_castle_king = 0;
+    } else if (p == bRook) {
+        if (src == a8) b->b_castle_queen = 0;
+        if (src == h8) b->b_castle_king = 0;
+    }
+
+   //update king position
    if(p == wKing){
         b->white_king_sq = dst;
     } else if(p == bKing){
@@ -406,10 +483,11 @@ void make_move(Board *b, Square src, Square dst){
     b->board[src] = EMPTY; 
     b->board[dst] = p;
 
-    if (p == wPawn && dst >= 21 && dst <= 28) {
+    // Pawn promotion
+    if (p == wPawn && dst >= a8 && dst <= h8) {
         printf("White pawn promoting at %d\n", dst);
         b->board[dst] = wQueen;
-    } else if (p == bPawn && dst >= 91 && dst <= 98) {
+    } else if (p == bPawn && dst >= a1 && dst <= h1) {
         printf("Black pawn promoting at %d\n", dst);
         b->board[dst] = bQueen;
     }
