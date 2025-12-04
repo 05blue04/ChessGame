@@ -15,31 +15,21 @@ static int is_square_valid(Square sq){
 }
 
 
-void debug_is_legal_move(Board *b, Square src, Square dst){
-    fprintf(stderr,"Checking to see if move %d to %d is valid\n",src,dst);
-    is_legal_move(b,src,dst);
-}
-
 int is_legal_move(Board *b, Square src, Square dst){
     
     if (b == NULL){
-        fprintf(stderr, "is_legal_move: board must be initialized\n");
         return 0;
     }
 
     if (!is_square_valid(src)){
-
-        fprintf(stderr, "square %d is an invalid square\n",src);
         return 0;
     }
 
     if (!is_square_valid(dst)){
-        fprintf(stderr, "square %d is an invalid square\n",dst);
         return 0;
     }
 
     if(src == dst){
-        fprintf(stderr, "cant move piece to same square\n");
         return 0;
     }
 
@@ -48,18 +38,15 @@ int is_legal_move(Board *b, Square src, Square dst){
 
     //check if a piece exists
     if(p == EMPTY){
-        fprintf(stderr,"piece at src:%d is empty\n",src);
         return 0;
     }
 
     //ensure turn order 
     if(b->turn == white && p > wKing){
-        fprintf(stderr,"moving out of order whites turn\n");
         return 0;
     }
 
     if(b->turn ==  black && p <= wKing){
-        fprintf(stderr,"moving out of order blacks turn\n");
         return 0;
     }
 
@@ -87,7 +74,7 @@ int is_legal_move(Board *b, Square src, Square dst){
         }
 
         if(check == 9 || check == 11){ // capture diagonaly 
-            valid = (dst_p != EMPTY);
+            valid = (dst_p != EMPTY) || (dst == b->en_passant_sq);
             break;
         }
 
@@ -106,7 +93,7 @@ int is_legal_move(Board *b, Square src, Square dst){
         }
 
         if(check == 9 || check == 11){ // capture diagonaly
-            valid = (dst_p != EMPTY);
+            valid = (dst_p != EMPTY) || (dst == b->en_passant_sq);
             break;
         }
 
@@ -345,7 +332,7 @@ int is_legal_move(Board *b, Square src, Square dst){
         fprintf(stderr, "move leaves king in check\n");
         return 0;
     }
-
+ //-1 if none, otherwise the square that can be captured
     return 1;
 
 }
@@ -471,13 +458,34 @@ int is_stalemate(Board *b, int color) {
 
 void make_move(Board *b, Square src, Square dst){
     if(!is_legal_move(b,src,dst)){
-        fprintf(stderr,"move is illegal \n");
+        fprintf(stderr,"move %d to %d is illegal \n",src,dst);
         return;
     }
 
    Piece p = b->board[src];
 
-       // Handle castling - move the rook too
+    // check if enpassant possible 
+    if (p == wPawn && dst == b->en_passant_sq) {
+        printf("here");
+        b->board[dst + 10] = EMPTY;  // Black pawn was one rank below target
+    } else if (p == bPawn && dst == b->en_passant_sq) {
+        b->board[dst - 10] = EMPTY;  // White pawn was one rank above target
+        printf("here21");
+    }
+
+    // Reset en passant at start of each move
+    b->en_passant_sq = -1;
+
+    // if pawn moved 2 set enpassant target
+    if(p == wPawn && src - dst == 20){
+        b->en_passant_sq = src - 10;
+    } else if (p == bPawn && dst - src == 20){
+        printf("potential enpassant at %d\n",src + 10);
+        b->en_passant_sq = src + 10;
+    }
+    
+
+    // Handle castling - move the rook too
     if (p == wKing && abs((int)dst - (int)src) == 2) {
         if (dst == g1) {  // Kingside
             b->board[f1] = wRook;
@@ -530,7 +538,6 @@ void make_move(Board *b, Square src, Square dst){
         printf("Black pawn promoting at %d\n", dst);
         b->board[dst] = bQueen;
     }
-
 
    b->turn ^= 1;
 }

@@ -13,6 +13,8 @@ int is_in_check(Board *b, int color);
 
 int is_stalemate(Board *b, int color);
 
+int is_checkmate(Board *b, int color);
+
 int has_legal_moves(Board *b, int color);
 
 //check if square is attacked

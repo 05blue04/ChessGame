@@ -25,6 +25,7 @@ typedef struct _Board {
     int turn;
     Square white_king_sq;
     Square black_king_sq;
+    Square en_passant_sq; //-1 if none, otherwise the square that can be captured
 
 
     int w_castle_king; //can white king side castle?

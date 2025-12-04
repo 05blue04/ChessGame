@@ -28,6 +28,7 @@ Board *create_board_default(){
     b->w_castle_queen = 1;
     b->white_king_sq = e1;
     b->black_king_sq = e8;
+    b->en_passant_sq = -1;
 
     //initalize pieces onto board
     for(int i = 31; i < 39; i++){
@@ -72,6 +73,7 @@ void reset_board_default(Board *b){
     b->w_castle_queen = 1;
     b->white_king_sq = e1;
     b->black_king_sq = e8;
+    b->en_passant_sq = -1;
 
     for(int i = 31; i < 39; i++){
         b->board[i] = bPawn;
