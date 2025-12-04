@@ -38,6 +38,9 @@ typedef struct _Board {
 Board *create_board_default();
 
 
+Board *create_board_from_fen(const char *fen);
+
+
 //print the board
 void print_board(Board *b);
 

@@ -64,6 +64,103 @@ Board *create_board_default(){
     return b;
 }
 
+static Square algebraic_to_square(char file, char rank) {
+    // 'a'-'h' -> 1-8, '1'-'8' -> ranks
+    int f = file - 'a' + 1;
+    int r = '8' - rank + 2;  // '8' -> rank 2 (top), '1' -> rank 9 (bottom)
+    return r * 10 + f;
+}
+
+static Piece char_to_piece(char c) {
+    switch (c) {
+        case 'P': return wPawn;
+        case 'N': return wKnight;
+        case 'B': return wBishop;
+        case 'R': return wRook;
+        case 'Q': return wQueen;
+        case 'K': return wKing;
+        case 'p': return bPawn;
+        case 'n': return bKnight;
+        case 'b': return bBishop;
+        case 'r': return bRook;
+        case 'q': return bQueen;
+        case 'k': return bKing;
+        default:  return EMPTY;
+    }
+}
+
+
+Board *create_board_from_fen(const char *fen) {
+    Board *b = allocate_board();
+    if (b == NULL){
+        return b;
+    }
+
+    // Initialize defaults
+    b->w_castle_king = 0;
+    b->w_castle_queen = 0;
+    b->b_castle_king = 0;
+    b->b_castle_queen = 0;
+    b->en_passant_sq = -1;
+    b->white_king_sq = -1;
+    b->black_king_sq = -1;
+    
+    int rank = 2;  // Start at rank 8 (top of board)
+    int file = 1;
+    
+    while (*fen && *fen != ' ') {
+        if (*fen == '/') {
+            rank++;
+            file = 1;
+        } else if (*fen >= '1' && *fen <= '8') {
+            file += (*fen - '0');
+        } else {
+            Square sq = rank * 10 + file;
+            Piece p = char_to_piece(*fen);
+            b->board[sq] = p;
+            
+            // Track king positions
+            if (p == wKing) 
+                b->white_king_sq = sq;
+            if (p == bKing) 
+                b->black_king_sq = sq;
+            
+            file++;
+        }
+        fen++;
+    }
+    
+    if (*fen == ' ') fen++;
+    
+    b->turn = (*fen == 'w') ? white : black;
+    fen++;
+    
+    if (*fen == ' ') fen++;
+    
+    // Field 3: Castling rights
+    while (*fen && *fen != ' ') {
+        switch (*fen) {
+            case 'K': b->w_castle_king = 1; break;
+            case 'Q': b->w_castle_queen = 1; break;
+            case 'k': b->b_castle_king = 1; break;
+            case 'q': b->b_castle_queen = 1; break;
+            case '-': break;
+        }
+        fen++;
+    }
+    
+    if (*fen == ' ') fen++;
+    
+    // Field 4: En passant square
+    if (*fen && *fen != '-') {
+        char ep_file = *fen++;
+        char ep_rank = *fen++;
+        b->en_passant_sq = algebraic_to_square(ep_file, ep_rank);
+    }
+    
+    return b;
+}
+
 void reset_board_default(Board *b){
 
     b->turn = white;

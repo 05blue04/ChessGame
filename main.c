@@ -37,10 +37,15 @@ int main(int argc, char **argv){
     }
     else if(argc == 3 && strcmp(argv[1], "--fen") == 0) {
         // Load from FEN have to implement type shit
+        b = create_board_from_fen(argv[2]);
         if(b == NULL) {
             fprintf(stderr, "Error: Invalid FEN string\n");
             return EXIT_FAILURE;
         }
+        gui_init();
+        gui_run_game(b);
+        gui_cleanup();
+        destroy_board(b);
     }
     else if(argc == 2 && strcmp(argv[1], "--test") == 0) {
         test_movement();

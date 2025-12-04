@@ -233,7 +233,6 @@ int is_legal_move(Board *b, Square src, Square dst){
         //traverse path of rook to ensure no pieces are blocking its path
         int square = src + dir;
         while(square != (int)dst){
-            fprintf(stderr,"checkign square %d\n",square);
             if (b->board[square] != EMPTY){
                 valid = 0;
                 break;
@@ -329,7 +328,6 @@ int is_legal_move(Board *b, Square src, Square dst){
     }
 
     if (in_check) {
-        fprintf(stderr, "move leaves king in check\n");
         return 0;
     }
  //-1 if none, otherwise the square that can be captured
@@ -466,11 +464,9 @@ void make_move(Board *b, Square src, Square dst){
 
     // check if enpassant possible 
     if (p == wPawn && dst == b->en_passant_sq) {
-        printf("here");
         b->board[dst + 10] = EMPTY;  // Black pawn was one rank below target
     } else if (p == bPawn && dst == b->en_passant_sq) {
         b->board[dst - 10] = EMPTY;  // White pawn was one rank above target
-        printf("here21");
     }
 
     // Reset en passant at start of each move
@@ -480,7 +476,6 @@ void make_move(Board *b, Square src, Square dst){
     if(p == wPawn && src - dst == 20){
         b->en_passant_sq = src - 10;
     } else if (p == bPawn && dst - src == 20){
-        printf("potential enpassant at %d\n",src + 10);
         b->en_passant_sq = src + 10;
     }
     
