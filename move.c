@@ -186,6 +186,7 @@ int is_legal_move(Board *b, Square src, Square dst){
     case wBishop:
     case bBishop:{
         check = dst - src;
+        valid = 1;
         int dir = 0;
 
         // determining diagonal direction
@@ -216,7 +217,6 @@ int is_legal_move(Board *b, Square src, Square dst){
             square += dir;
         }
 
-        valid = 1;
         break;
     }
 
@@ -224,6 +224,7 @@ int is_legal_move(Board *b, Square src, Square dst){
     case bRook:{
         check = dst - src;
         int dir = 0;
+        valid = 1;
 
         if(check % 10  == 0){
             if(check > 0){
@@ -245,6 +246,7 @@ int is_legal_move(Board *b, Square src, Square dst){
         //traverse path of rook to ensure no pieces are blocking its path
         int square = src + dir;
         while(square != (int)dst){
+            fprintf(stderr,"checkign square %d\n",square);
             if (b->board[square] != EMPTY){
                 valid = 0;
                 break;
@@ -252,7 +254,7 @@ int is_legal_move(Board *b, Square src, Square dst){
             square += dir;
         }
 
-        valid = 1;
+
         break;
     }
 
@@ -260,6 +262,7 @@ int is_legal_move(Board *b, Square src, Square dst){
     case bQueen:{
         check = dst - src;
         int dir = 0;
+        valid = 1;
 
         //lowk light just a combo of rook + bishop moves
         if(check % 10  == 0){
@@ -301,7 +304,6 @@ int is_legal_move(Board *b, Square src, Square dst){
             square += dir;
         }
 
-        valid = 1;
         break;
     }
         
